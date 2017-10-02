@@ -4,38 +4,13 @@ class Container {
     }
 
     register(packageName, packageClass, dependencies = []) {
-        let err;
-
-        err = this._isInvalidName(packageName);
-        if (err) {
-            console.error(err);
-            return false;
-        }
-
-        err = this._isDuplicate(packageName);
-        if (err) {
-            console.error(err);
-            return false;
-        }
-
-        err = this._isInvalidDependencies(dependencies);
-        if (err) {
-            err.name = "DependencyError"            
-            console.error(err);
-            return false;
-        }
-
-        err = this._isSelfDependent(packageName, dependencies);
-        if (err) {
-            err.name = "DependencyError"            
-            console.error(err);
-            return false;
-        }
-
-        err = this._isUnknownDependencies(dependencies)
-        if (err) {
-            err.name = "DependencyError"            
-            console.error(err);
+        if (
+            this._isInvalidName(packageName) ||
+            this._isDuplicate(packageName) ||
+            this._isInvalidDependencies(dependencies) ||
+            this._isSelfDependent(packageName, dependencies) ||
+            this._isUnknownDependencies(dependencies)
+        ) {
             return false;
         }
 
@@ -58,8 +33,7 @@ class Container {
         if (this.packages[packageName]) {
             return this.packages[packageName].package
         }
-
-        console.error(new Error("A package with this name does not exist"));
+        console.error(new Error("A package with this name does not exist - you can use `listAll()` to see which packages are available"));
         return false;
     }
 
@@ -69,25 +43,29 @@ class Container {
 
     _isInvalidName(packageName) {
         if (typeof packageName !== 'string') {
-            return new Error("Invalid package name - your package name must be a string");
+            console.error(new Error("Invalid package name: your package name must be a string - you can use `listAll()` to see which packages are available"));
+            return true;
         }
     }
 
     _isDuplicate(packageName) {
         if (this.packages[packageName]) {
-            return new Error("A package with this name has already been registered");
+            console.error(new Error("A package with this name has already been registered - you can use `listAll()` to see which packages are available"));
+            return true;            
         }
     }
 
     _isInvalidDependencies(dependencies) {
         if (dependencies.constructor !== Array) {
-            return new Error("The list of dependencies should be in the format of an Array of Strings. You can use `listAll()` to see which packages are available");
+            console.error(new Error("The list of dependencies should be in the format of an Array of Strings. You can use `listAll()` to see which packages are available"));
+            return true;            
         }
     }
 
     _isSelfDependent(packageName, dependencies) {
         if (dependencies.includes(packageName)) {
-            return new Error("Your package must not be a dependency of itself");
+            console.error(new Error("Your package must not be a dependency of itself"));
+            return true;            
         }
     }
 
@@ -100,7 +78,8 @@ class Container {
         });
 
         if (invalidDependencies.length > 0) {
-            return new Error(`Your package contains unknown dependencies: ${invalidDependencies}`)
+            console.error(new Error(`Your package contains unknown dependencies: ${invalidDependencies}`));
+            return true;            
         }
     }
 };
